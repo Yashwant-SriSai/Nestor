@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+streamlit
+requests
+python-dotenv
+google-genai
+chromadb
+tree-sitter-language-pack
+rank-bm25
+langchain-groq
+langgraph

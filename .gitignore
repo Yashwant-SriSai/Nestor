@@ -1,0 +1,13 @@
+# Secrets: real API keys must never be committed
+.env
+
+# Virtual environment: large, and recreated from requirements.txt
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Cloned repos and local vector data created at runtime
+chroma_db/
+cloned_repos/
