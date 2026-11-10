@@ -1,26 +1,13 @@
-
-.git
-.gitignore
-
+# Files that must never be copied into an image.
+# .env holds your real API keys: they go in Render's Environment settings instead.
 .env
 .env.*
-!.env.example
-
 venv/
-.venv/
+.git/
 __pycache__/
-*.py[cod]
+*.pyc
 
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
-chroma_db/
-cloned_repos/
-
-*.zip
-*.log
-
-.DS_Store
-.idea/
-.vscode/
+# Not needed by the backend image.
+frontend/
+README.md
+Dockerfile*

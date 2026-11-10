@@ -1,0 +1,42 @@
+# Dockerfile.backend
+# Packs the FastAPI backend into an image Render can run.
+
+# Python 3.12 on purpose: most packages have ready-made installers for it.
+# (Your PC can stay on 3.13; the image has its own Python.)
+FROM python:3.12-slim
+
+# PYTHONUNBUFFERED shows logs immediately in Render's log view.
+# PYTHONDONTWRITEBYTECODE avoids useless .pyc files inside the image.
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+
+# The slim image has no git, and our cloner runs `git clone`.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Security: run as a normal user, not root. Cloned repos are untrusted data,
+# so the less power this process has, the better.
+RUN useradd --create-home --uid 1000 app
+
+WORKDIR /app
+
+# Copy requirements first: Docker caches this layer, so rebuilds are fast
+# when only the code changed.
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Only the backend code goes in. No .env (secrets) and no frontend.
+COPY backend ./backend
+
+USER app
+
+# Download the two things that are otherwise fetched on first use (the Chroma
+# embedding model and the tree-sitter parsers) while the image is BUILT.
+# Render's free disk is wiped on every restart, so without this each cold start
+# would download them again.
+RUN python -c "import tree_sitter_language_pack as t; [t.get_parser(l) for l in ('python', 'javascript')]; from chromadb.utils.embedding_functions import DefaultEmbeddingFunction; DefaultEmbeddingFunction()(['warm up'])"
+
+# Render tells the app which port to use through the PORT variable. Binding to
+# 0.0.0.0 makes the server reachable from outside the container.
+# The shell form (sh -c) is what lets ${PORT} be filled in.
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

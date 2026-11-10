@@ -1,0 +1,27 @@
+# Dockerfile.frontend
+# Packs the Streamlit UI into an image Render can run.
+
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+
+# Security: run as a normal user, not root.
+RUN useradd --create-home --uid 1000 app
+
+WORKDIR /app
+
+# The UI only needs these 3 packages, so we don't use requirements.txt here
+# (that one also holds Chroma, LangGraph and so on). The version numbers are in
+# quotes, otherwise the shell would treat ">" as a redirect.
+RUN pip install --no-cache-dir "streamlit>=1.65" "requests>=2.32" "python-dotenv>=1.0"
+
+# Only the UI code goes in.
+COPY frontend ./frontend
+
+USER app
+
+# Render provides PORT. Address 0.0.0.0 makes the app reachable from outside the
+# container; headless stops Streamlit from trying to open a browser on the server.
+# BACKEND_URL is NOT set here: you set it in Render's Environment settings, and
+# api_client.py reads it.
+CMD ["sh", "-c", "streamlit run frontend/app.py --server.port ${PORT:-8501} --server.address 0.0.0.0 --server.headless true"]
