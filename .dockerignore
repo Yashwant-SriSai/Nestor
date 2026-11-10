@@ -7,7 +7,6 @@ venv/
 __pycache__/
 *.pyc
 
-# Not needed by the backend image.
-frontend/
+
 README.md
 Dockerfile*
